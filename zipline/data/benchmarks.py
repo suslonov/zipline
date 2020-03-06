@@ -29,14 +29,20 @@ def get_benchmark_returns(symbol):
     The data is provided by IEX (https://iextrading.com/), and we can
     get up to 5 years worth of data.
     """
-    r = requests.get(
-        'https://api.iextrading.com/1.0/stock/{}/chart/5y'.format(symbol)
-    )
-    data = r.json()
-
-    df = pd.DataFrame(data)
-
-    df.index = pd.DatetimeIndex(df['date'])
-    df = df['close']
-
+# from Quandl
+    df = quandl.get("EOD/" + symbol, authtoken=os.environ.get('QUANDL_API_KEY')).Close.rename(columns={'Close': 'close'})
     return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]
+
+
+# from Yahoo Finance - old
+    # r = requests.get(
+    #     'https://api.iextrading.com/1.0/stock/{}/chart/5y'.format(symbol)
+    # )
+    # data = r.json()
+
+    # df = pd.DataFrame(data)
+
+    # df.index = pd.DatetimeIndex(df['date'])
+    # df = df['close']
+
+    # return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]

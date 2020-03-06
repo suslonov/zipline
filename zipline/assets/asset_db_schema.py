@@ -75,7 +75,7 @@ equity_symbol_mappings = sa.Table(
     sa.Column(
         'symbol',
         sa.Text,
-        nullable=False,
+        nullable=True,
     ),
     sa.Column(
         'company_symbol',

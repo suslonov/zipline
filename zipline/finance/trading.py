@@ -35,6 +35,9 @@ class SimulationParameters(object):
                  data_frequency='daily',
                  arena='backtest'):
 
+        start_session = pd.Timestamp(start_session).tz_localize(tz='US/Central')
+        end_session = pd.Timestamp(end_session).tz_localize(tz='US/Central')
+
         assert type(start_session) == pd.Timestamp
         assert type(end_session) == pd.Timestamp
 

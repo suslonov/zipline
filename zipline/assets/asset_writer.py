@@ -194,6 +194,9 @@ def split_delimited_symbol(symbol):
     if symbol in _delimited_symbol_default_triggers:
         return '', ''
 
+    if type(symbol) != str:
+        return '', ''
+
     symbol = symbol.upper()
 
     split_list = re.split(

@@ -3,6 +3,7 @@ Module for building a complete dataset from local directory with csv files.
 """
 import os
 import sys
+import copy
 
 from logbook import Logger, StreamHandler
 from numpy import empty
@@ -131,6 +132,8 @@ def csvdir_bundle(environ,
                                               'declared_date', 'pay_date']),
                    'splits': DataFrame(columns=['sid', 'ratio',
                                                 'effective_date'])}
+    divs_splits_m = copy.deepcopy(divs_splits_d)
+    metadata = None
     for tframe in tframes:
         ddir = os.path.join(csvdir, tframe)
 
@@ -140,41 +143,41 @@ def csvdir_bundle(environ,
         if not symbols:
             raise ValueError("no <symbol>.csv* files found in %s" % ddir)
 
-        dtype = [('start_date', 'datetime64[ns]'),
-                 ('end_date', 'datetime64[ns]'),
-                 ('auto_close_date', 'datetime64[ns]'),
-                 ('symbol', 'object')]
-        metadata = DataFrame(empty(len(symbols), dtype=dtype))
+        if metadata is None:
+            dtype = [('start_date', 'datetime64[ns]'),
+                     ('end_date', 'datetime64[ns]'),
+                     ('auto_close_date', 'datetime64[ns]'),
+                     ('symbol', 'object')]
+            metadata = DataFrame(empty(len(symbols), dtype=dtype))
 
         if tframe == 'minute':
             writer = minute_bar_writer
+            divs_splits = divs_splits_m
         else:
             writer = daily_bar_writer
+            divs_splits = divs_splits_d
 
         writer.write(_pricing_iter(ddir, symbols, metadata,
                      divs_splits, show_progress),
                      show_progress=show_progress)
 
-        # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
-        # register "CSVDIR" to resolve to the NYSE calendar, because these
-        # are all equities and thus can use the NYSE calendar.
-        metadata['exchange'] = "CSVDIR"
-
-        asset_db_writer.write(equities=metadata)
-
         divs_splits['divs']['sid'] = divs_splits['divs']['sid'].astype(int)
         divs_splits['splits']['sid'] = divs_splits['splits']['sid'].astype(int)
-        adjustment_writer.write(splits=divs_splits['splits'],
-                                dividends=divs_splits['divs'])
 
+    adjustment_writer.write(splits=divs_splits_d['splits'],
+                        dividends=divs_splits_d['divs'])
+        
+    # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
+    # register "CSVDIR" to resolve to the NYSE calendar, because these
+    # are all equities and thus can use the NYSE calendar.
+    metadata['exchange'] = "CSVDIR"
+    asset_db_writer.write(equities=metadata)
 
 def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
     with maybe_show_progress(symbols, show_progress,
                              label='Loading custom pricing data: ') as it:
         files = os.listdir(csvdir)
-        for sid, symbol in enumerate(it):
-            logger.debug('%s: sid %s' % (symbol, sid))
-
+        for sid, symbol in enumerate(it)
             try:
                 fname = [fname for fname in files
                          if '%s.csv' % symbol in fname][0]
@@ -191,7 +194,12 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
 
             # The auto_close date is the day after the last trade.
             ac_date = end_date + Timedelta(days=1)
-            metadata.iloc[sid] = start_date, end_date, ac_date, symbol
+            sids = metadata.loc[metadata["symbol"] == symbol].index
+            if sids.empty:
+                metadata.iloc[sid] = start_date, end_date, ac_date, symbol
+            else:
+                sid = sids[0]
+            logger.debug('%s: sid %s' % (symbol, sid))
 
             if 'split' in dfr.columns:
                 tmp = 1. / dfr[dfr['split'] != 1.0]['split']
