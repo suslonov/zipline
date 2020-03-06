@@ -14,6 +14,8 @@
 # limitations under the License.
 import pandas as pd
 import requests
+import quandl
+import os
 
 
 def get_benchmark_returns(symbol):

@@ -1,0 +1,11 @@
+rm -r ~/.zipline/data_to_ingest/daily/*
+
+declare -a symbols=("UVXY" "SPY" "TLT" "SVXY")
+
+for s in "${symbols[@]}"
+do
+    a1="${HOME}/.zipline/data_to_ingest/daily/$s.csv"
+    a2="https://www.quandl.com/api/v3/datasets/EOD/$s.csv?api_key=$QUANDL_API_KEY"
+    wget -O $a1 $a2
+    python fix_quandl_csv.py $a1
+done

@@ -1,0 +1,4 @@
+rm -r ~/.zipline/data/mixed-data/*
+
+zipline ingest -b mixed-data
+

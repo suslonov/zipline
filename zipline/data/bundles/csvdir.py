@@ -127,7 +127,7 @@ def csvdir_bundle(environ,
             raise ValueError("'daily' and 'minute' directories "
                              "not found in '%s'" % csvdir)
 
-    divs_splits = {'divs': DataFrame(columns=['sid', 'amount',
+    divs_splits_d = {'divs': DataFrame(columns=['sid', 'amount',
                                               'ex_date', 'record_date',
                                               'declared_date', 'pay_date']),
                    'splits': DataFrame(columns=['sid', 'ratio',
@@ -177,7 +177,7 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
     with maybe_show_progress(symbols, show_progress,
                              label='Loading custom pricing data: ') as it:
         files = os.listdir(csvdir)
-        for sid, symbol in enumerate(it)
+        for sid, symbol in enumerate(it):
             try:
                 fname = [fname for fname in files
                          if '%s.csv' % symbol in fname][0]
@@ -232,4 +232,4 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
             yield sid, dfr
 
 
-register_calendar_alias("CSVDIR", "NYSE")
+register_calendar_alias("CSVDIR", "NYSE", force=True)

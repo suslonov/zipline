@@ -1,0 +1,20 @@
+
+mysql -u root -p
+
+create database zipline_runs;
+create user 'zipline'@'localhost' identified by 'zipline_pass';
+grant all on zipline_runs.* to 'zipline'@'localhost';
+
+mysql -u zipline -p
+
+use zipline_runs;
+create table algorithms_table (algorithm_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name varchar(255), extractor varchar(1023));
+create table saved_runs_table (saved_run_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, run_datetime datetime DEFAULT CURRENT_TIMESTAMP, algorithm_id int, run_parameters varchar(1023), algorithm_parameters varchar(1023), metrics varchar(1023), is_xdata int, run_comment varchar(1023));
+create table xdata_table (saved_run_id INT NOT NULL PRIMARY KEY, xdata1 LONGBLOB, xdata2 LONGBLOB);
+create table text_output_table (saved_run_id INT NOT NULL PRIMARY KEY, text_output LONGBLOB);
+
+
+------ run_datetime timestamp  for  the server in saved_runs_table !
+create table saved_runs_table (saved_run_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, run_datetime timestamp DEFAULT CURRENT_TIMESTAMP, algorithm_id int, run_parameters varchar(1023), algorithm_parameters varchar(1023), metrics varchar(1023), is_xdata int, run_comment varchar(1023));
+
+
