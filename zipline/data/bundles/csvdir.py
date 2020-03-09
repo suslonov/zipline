@@ -134,6 +134,7 @@ def csvdir_bundle(environ,
                                                 'effective_date'])}
     divs_splits_m = copy.deepcopy(divs_splits_d)
     metadata = None
+    writer_flag = True
     for tframe in tframes:
         ddir = os.path.join(csvdir, tframe)
 
@@ -164,14 +165,16 @@ def csvdir_bundle(environ,
         divs_splits['divs']['sid'] = divs_splits['divs']['sid'].astype(int)
         divs_splits['splits']['sid'] = divs_splits['splits']['sid'].astype(int)
 
-    adjustment_writer.write(splits=divs_splits_d['splits'],
-                        dividends=divs_splits_d['divs'])
-        
-    # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
-    # register "CSVDIR" to resolve to the NYSE calendar, because these
-    # are all equities and thus can use the NYSE calendar.
-    metadata['exchange'] = "CSVDIR"
-    asset_db_writer.write(equities=metadata)
+        if writer_flag:
+            adjustment_writer.write(splits=divs_splits_d['splits'],
+                                dividends=divs_splits_d['divs'])
+                
+            # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
+            # register "CSVDIR" to resolve to the NYSE calendar, because these
+            # are all equities and thus can use the NYSE calendar.
+            metadata['exchange'] = "CSVDIR"
+            asset_db_writer.write(equities=metadata)
+            writer_flag = True
 
 def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
     with maybe_show_progress(symbols, show_progress,
