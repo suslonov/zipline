@@ -9,8 +9,8 @@ import pandas as pd
 
 symb = 'UVXY'
 symb2 = 'SPY'
-start=datetime.strptime("2020-1-2", "%Y-%m-%d")
-end=datetime.strptime("2020-1-3", "%Y-%m-%d")
+start=pd.Timestamp(datetime.strptime("2020-1-2", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+end=pd.Timestamp(datetime.strptime("2020-1-3", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 
 class algorithm_context():
 
@@ -27,8 +27,8 @@ class algorithm_context():
         record(UVXY=data.current(symbol(symb), 'price')) 
         print(get_datetime(),
               str(data.history(symbol(symb), 'close', 1, '1m').values[0]),
-              str(data.history(symbol(symb), 'close', 1, '1d').values[0]),
-              str(data.history(symbol(symb2), 'close', 1, '1d').values[0]))
+              str(data.history(symbol(symb), 'close', 1, '1d').values[0]))
+              # str(data.history(symbol(symb2), 'close', 1, '1d').values[0]))
     
     def before_trading_start(self, context, data):
         # Create a window
