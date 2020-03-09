@@ -1,4 +1,5 @@
 runner/algorithms
+runner/working
 .bundle
 db/*.sqlite3
 log/*.log
