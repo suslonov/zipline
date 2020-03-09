@@ -174,7 +174,7 @@ def csvdir_bundle(environ,
             # are all equities and thus can use the NYSE calendar.
             metadata['exchange'] = "CSVDIR"
             asset_db_writer.write(equities=metadata)
-            writer_flag = True
+            writer_flag = False
 
 def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
     with maybe_show_progress(symbols, show_progress,
