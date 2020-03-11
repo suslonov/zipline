@@ -52,7 +52,7 @@ from zipline.data.history_loader import (
     DailyHistoryLoader,
     MinuteHistoryLoader,
 )
-from zipline.data.bar_reader import NoDataOnDate
+from zipline.data.bar_reader import NoDataForSid, NoDataOnDate
 from zipline.utils.math_utils import (
     nansum,
     nanmean,
@@ -441,6 +441,7 @@ class DataPortal(object):
         if field not in BASE_FIELDS:
             raise KeyError("Invalid column: " + str(field))
 
+# to do check it - anton
         if dt < asset.start_date or \
                 (data_frequency == "daily" and
                     session_label > asset.end_date) or \
@@ -453,24 +454,26 @@ class DataPortal(object):
             elif field != "last_traded":
                 return np.NaN
 
-        if data_frequency == "daily":
-            if field == "contract":
-                return self._get_current_contract(asset, session_label)
-            else:
-                return self._get_daily_spot_value(
-                    asset, field, session_label,
-                )
+        if data_frequency != "daily":
+            try:
+                if field == "last_traded":
+                    return self.get_last_traded_dt(asset, dt, 'minute')
+                elif field == "price":
+                    return self._get_minute_spot_value(
+                        asset, "close", dt, ffill=True,
+                    )
+                elif field == "contract":
+                    return self._get_current_contract(asset, dt)
+                else:
+                    return self._get_minute_spot_value(asset, field, dt)
+            except NoDataForSid:
+                pass
+        if field == "contract":
+            return self._get_current_contract(asset, session_label)
         else:
-            if field == "last_traded":
-                return self.get_last_traded_dt(asset, dt, 'minute')
-            elif field == "price":
-                return self._get_minute_spot_value(
-                    asset, "close", dt, ffill=True,
+            return self._get_daily_spot_value(
+                asset, field, session_label,
                 )
-            elif field == "contract":
-                return self._get_current_contract(asset, dt)
-            else:
-                return self._get_minute_spot_value(asset, field, dt)
 
     def get_spot_value(self, assets, field, dt, data_frequency):
         """
@@ -817,49 +820,51 @@ class DataPortal(object):
                                        end_dt,
                                        field_to_use,
                                        data_frequency):
-        if data_frequency == 'daily':
+        if data_frequency != 'daily':
             # two cases where we use daily data for the whole range:
             # 1) the history window ends at midnight utc.
             # 2) the last desired day of the window is after the
             # last trading day, use daily data for the whole range.
-            return self._get_daily_window_data(
-                assets,
-                field_to_use,
-                days_for_window,
-                extra_slot=False
+            try:
+                # minute mode, requesting '1d'
+                daily_data = self._get_daily_window_data(
+                    assets,
+                    field_to_use,
+                    days_for_window[0:-1]
+                )
+    
+                if field_to_use == 'open':
+                    minute_value = self._daily_aggregator.opens(
+                        assets, end_dt)
+                elif field_to_use == 'high':
+                    minute_value = self._daily_aggregator.highs(
+                        assets, end_dt)
+                elif field_to_use == 'low':
+                    minute_value = self._daily_aggregator.lows(
+                        assets, end_dt)
+                elif field_to_use == 'close':
+                    minute_value = self._daily_aggregator.closes(
+                        assets, end_dt)
+                elif field_to_use == 'volume':
+                    minute_value = self._daily_aggregator.volumes(
+                        assets, end_dt)
+                elif field_to_use == 'sid':
+                    minute_value = [
+                        int(self._get_current_contract(asset, end_dt))
+                        for asset in assets]
+    
+                # append the partial day.
+                daily_data[-1] = minute_value
+    
+                return daily_data
+            except NoDataForSid:
+                pass
+        return self._get_daily_window_data(
+            assets,
+            field_to_use,
+            days_for_window,
+            extra_slot=False
             )
-        else:
-            # minute mode, requesting '1d'
-            daily_data = self._get_daily_window_data(
-                assets,
-                field_to_use,
-                days_for_window[0:-1]
-            )
-
-            if field_to_use == 'open':
-                minute_value = self._daily_aggregator.opens(
-                    assets, end_dt)
-            elif field_to_use == 'high':
-                minute_value = self._daily_aggregator.highs(
-                    assets, end_dt)
-            elif field_to_use == 'low':
-                minute_value = self._daily_aggregator.lows(
-                    assets, end_dt)
-            elif field_to_use == 'close':
-                minute_value = self._daily_aggregator.closes(
-                    assets, end_dt)
-            elif field_to_use == 'volume':
-                minute_value = self._daily_aggregator.volumes(
-                    assets, end_dt)
-            elif field_to_use == 'sid':
-                minute_value = [
-                    int(self._get_current_contract(asset, end_dt))
-                    for asset in assets]
-
-            # append the partial day.
-            daily_data[-1] = minute_value
-
-            return daily_data
 
     def _handle_minute_history_out_of_bounds(self, bar_count):
         cal = self.trading_calendar
@@ -988,6 +993,7 @@ class DataPortal(object):
             assets_with_leading_nan = np.where(isnull(df.iloc[0]))[0]
 
             history_start, history_end = df.index[[0, -1]]
+# to do check it - anton
             if ffill_data_frequency == 'daily' and data_frequency == 'minute':
                 # When we're looking for a daily value, but we haven't seen any
                 # volume in today's minute bars yet, we need to use the
@@ -1345,6 +1351,7 @@ class DataPortal(object):
         if bars is None:
             raise ValueError("bars cannot be None!")
 
+# to do check it - anton
         if data_frequency == "minute":
             freq_str = "1m"
             calculated_bar_count = int(self._get_minute_count_for_transform(
