@@ -64,10 +64,10 @@ run_comment = "Run on 2 years VIX_OPEN_LEVEL=20"
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 20, "stop_limit": 0.075, "MA": 100}
 
 run_params = {}
-run_params["start"] = datetime.strptime("2012-03-01", "%Y-%m-%d")
-run_params["end"] = datetime.strptime("2014-12-31", "%Y-%m-%d")
+run_params["start"] = pd.Timestamp(datetime.strptime("2012-03-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+run_params["end"] = pd.Timestamp(datetime.strptime("2014-12-31", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 run_params["capital_base"] = 1000000
-run_params["bundle"] = 'quandl-eod-csv'
+run_params["bundle"] = 'mixed-data'
 
 with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
     x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
@@ -87,10 +87,10 @@ run_comment = "Run on 7 years"
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100}
 
 run_params = {}
-run_params["start"] = datetime.strptime("2012-03-01", "%Y-%m-%d")
-run_params["end"] = datetime.strptime("2019-12-31", "%Y-%m-%d")
+run_params["start"] = pd.Timestamp(datetime.strptime("2012-03-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+run_params["end"] = pd.Timestamp(datetime.strptime("2019-12-31", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 run_params["capital_base"] = 1000000
-run_params["bundle"] = 'quandl-eod-csv'
+run_params["bundle"] = 'mixed-data'
 
 with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
     x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
