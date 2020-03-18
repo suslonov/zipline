@@ -204,8 +204,8 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
                 sid = sids[0]
             logger.debug('%s: sid %s' % (symbol, sid))
 
-            if 'split' in dfr.columns:
-                tmp = 1. / dfr[dfr['split'] != 1.0]['split']
+            if 'split_ratio' in dfr.columns:
+                tmp = 1. / dfr[dfr['split_ratio'] != 1.0]['split_ratio']
                 split = DataFrame(data=tmp.index.tolist(),
                                   columns=['effective_date'])
                 split['ratio'] = tmp.tolist()
@@ -217,9 +217,9 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
                 split.set_index(index, inplace=True)
                 divs_splits['splits'] = splits.append(split)
 
-            if 'dividend' in dfr.columns:
+            if 'ex_dividend' in dfr.columns:
                 # ex_date   amount  sid record_date declared_date pay_date
-                tmp = dfr[dfr['dividend'] != 0.0]['dividend']
+                tmp = dfr[dfr['ex_dividend'] != 0.0]['ex_dividend']
                 div = DataFrame(data=tmp.index.tolist(), columns=['ex_date'])
                 div['record_date'] = NaT
                 div['declared_date'] = NaT

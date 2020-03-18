@@ -33,17 +33,18 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     more_output = algorithm_context.records()
     return x, more_output
 
-alg_name = "VIX+Bonds+Indicators 1"
+alg_name = "VIX+Bonds+Indicators+Stops"
 run_comment = "Test run on full data test comment"
 
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100}
 
 run_params = {}
 #run_params["start"] = datetime.strptime("2017-01-01", "%Y-%m-%d")
-run_params["start"] = pd.Timestamp(datetime.strptime("2019-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
-run_params["end"] = pd.Timestamp(datetime.strptime("2020-01-27", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+run_params["start"] = pd.Timestamp(datetime.strptime("2018-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+run_params["end"] = pd.Timestamp(datetime.strptime("2019-01-27", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 run_params["capital_base"] = 100000
 run_params["bundle"] = 'mixed-data'
+run_params["data_frequency"] = 'minute'
 
 with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
     x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
