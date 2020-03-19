@@ -34,7 +34,7 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     more_output = algorithm_context.records()
     return x, more_output
 
-alg_name = "VIX+Bonds+Indicators 1"
+alg_name = "VIX+Bonds+Indicators+Stops 1"
 params_extractor = {"parameter1": "VIX_OPEN_LEVEL", "parameter2": "VIX_SHARE", "parameter3": "WINDOW_MIN"}
 
 run_comment = "Run on 2019 year"

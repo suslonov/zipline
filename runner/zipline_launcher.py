@@ -33,7 +33,7 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     more_output = algorithm_context.records()
     return x, more_output
 
-alg_name = "VIX+Bonds+Indicators+Stops"
+alg_name = "VIX+Bonds+Indicators+Stops 1"
 run_comment = "Test run on full data test comment"
 
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100}
