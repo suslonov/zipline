@@ -36,6 +36,7 @@ if not a.empty:
 
     a.set_index(pd.DatetimeIndex(a["_datetimeEST"]), inplace=True)
     a["Date"] = a["_datetimeEST"].dt.tz_convert(tz=pytz.utc)
+    a["Date"] += pd.Timedelta(minutes=1)  # shift to be the same as Quantopian
     pb = a.between_time(start_session, end_session).sort_values(by="Date")
     pb["Date_only"] = pb["Date"].dt.normalize().tz_convert(tz=pytz.utc)
     
