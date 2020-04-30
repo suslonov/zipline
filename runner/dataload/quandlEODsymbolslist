@@ -7,7 +7,7 @@ do
     a1="${HOME}/.zipline/data_to_ingest/daily/$s.csv"
     a2="https://www.quandl.com/api/v3/datasets/EOD/$s.csv?api_key=$QUANDL_API_KEY"
     start_session="1993-1-29"
-    end_session="2020-03-18"
+    end_session="2020-04-28"
 
     wget -O $a1 $a2
     python fix_quandl_csv.py $a1 $start_session $end_session

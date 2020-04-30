@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 15 15:59:06 2020
-
-@author: anton
-"""
 
 import os
 if  "__file__" in globals():
