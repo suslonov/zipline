@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 16 07:23:26 2020
-
-@author: anton
-"""
 
 import MySQLdb
 import pickle
@@ -12,11 +7,97 @@ import zlib
 import json
 import pandas as pd
 
-
 db_host="127.0.0.1"
 db_user="zipline"
 db_passwd="zipline_pass"
 db_name="zipline_runs"
+
+def save_signals_to_db(alg_name, input_date, signals_comment, algorithm_params, signals, market_data, params_extractor, signals_extractor, port=None):
+    s1 = """SELECT algorithm_id FROM algorithms_table WHERE name = %s"""
+    s2 = """INSERT INTO algorithms_table (name, extractor) VALUES (%s, "%s")"""
+    s3 = """INSERT INTO signals_table (algorithm_id, input_date, signals_comment, algorithm_parameters, signals_extractor, market_data) VALUES (%s, %s, "%s", "%s", "%s", %s)"""
+    s5 = """INSERT INTO signals_data_table (signals_id, signals) VALUES (%s, _binary "%s")"""
+
+    if port:
+        db = MySQLdb.connect(host=db_host, port=port, user=db_user, passwd=db_passwd, db=db_name)
+    else:
+        db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
+    mycur = db.cursor()
+    
+    i = mycur.execute(s1, (alg_name, ))
+    if i == 0:
+        mycur.execute(s2, (alg_name, json.dumps(params_extractor)))
+        mycur.execute("SELECT LAST_INSERT_ID();")
+        algorithm_id = mycur.fetchall()[0][0]
+    else:
+        algorithm_id = mycur.fetchall()[0][0]
+
+    mycur.execute(s3, (algorithm_id, input_date.strftime('%Y-%m-%d %H:%M:%S'), signals_comment, json.dumps(algorithm_params, default=str), json.dumps(signals_extractor, default=str), market_data))
+    mycur.execute("SELECT LAST_INSERT_ID();")
+    signals_id = mycur.fetchall()[0][0]
+    db.commit()
+       
+    mycur.execute(s5, (signals_id, zlib.compress(json.dumps(signals, default=str).encode())))
+    db.commit()
+    db.close()
+
+
+def get_last_signal_from_db():
+    db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
+    mycur = db.cursor()
+    
+    s2 = """SELECT algorithm_id, signals_id FROM signals_table order by signals_datetime desc"""
+    i = mycur.execute(s2)
+    if i == 0:
+        db.close()
+        return None
+    else:
+        row = mycur.fetchone()
+        s1 = """SELECT name FROM algorithms_table WHERE algorithm_id = %s"""
+        mycur.execute(s1, (row[0], ))
+        name = mycur.fetchone()[0]
+        db.close()
+        return (row[0], row[1], name)
+
+def load_signals_from_db(alg_name = None, algorithm_id = None, signals_id = None):
+    db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
+    mycur = db.cursor()
+    
+    if signals_id:
+        s2 = """SELECT * FROM signals_table WHERE signals_id = %s"""
+        mycur.execute(s2, (signals_id, ))
+        l = list(mycur.fetchall())
+        db.close()
+        return l
+    
+    if not algorithm_id and alg_name:
+        s1 = """SELECT algorithm_id FROM algorithms_table WHERE name = %s"""
+        i = mycur.execute(s1, (alg_name, ))
+        if i == 0:
+            db.close()
+            return []
+        else:
+            algorithm_id = mycur.fetchall()[0][0]
+    
+    s2 = """SELECT * FROM signals_table WHERE algorithm_id = %s order by signals_datetime desc"""
+    mycur.execute(s2, (algorithm_id, ))
+    l = list(mycur.fetchall())
+    db.close()
+    return l
+
+def load_signals_data_from_db(signals_id):
+    db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
+    mycur = db.cursor()
+    s1 = """SELECT signals FROM signals_data_table WHERE signals_id = %s"""
+    i = mycur.execute(s1, (signals_id, ))
+    if i == 0:
+        db.close()
+        return None
+    else:
+        signals = zlib.decompress(mycur.fetchall()[0][0][1:-1]).decode("utf-8")
+        db.close()
+        return signals
+
 
 def save_run_to_db(alg_name, run_comment, text_output, run_params, algorithm_params, metrics, params_extractor, x = None):
 
@@ -168,19 +249,23 @@ def clean_db(alg_name = None, algorithm_id = None, saved_run_id = None):
         s3 = """DELETE xdata_table FROM xdata_table INNER JOIN saved_runs_table ON saved_runs_table.saved_run_id = xdata_table.saved_run_id WHERE saved_runs_table.algorithm_id = %s"""
         s5 = """DELETE text_output_table FROM text_output_table INNER JOIN saved_runs_table ON saved_runs_table.saved_run_id = text_output_table.saved_run_id WHERE saved_runs_table.algorithm_id = %s"""
         s4 = """DELETE FROM saved_runs_table WHERE algorithm_id = %s"""
+        s5 = """DELETE FROM signals_table WHERE algorithm_id = %s"""
         mycur.execute(s2, (algorithm_id, ))
         mycur.execute(s3, (algorithm_id, ))
         mycur.execute(s5, (algorithm_id, ))
         mycur.execute(s4, (algorithm_id, ))
+        mycur.execute(s5, (algorithm_id, ))
     else:
         s2 = """DELETE FROM algorithms_table"""
         s3 = """DELETE FROM xdata_table"""
         s5 = """DELETE FROM text_output_table"""
         s4 = """DELETE FROM saved_runs_table"""
+        s5 = """DELETE FROM signals_table"""
         mycur.execute(s2)
         mycur.execute(s3)
         mycur.execute(s5)
         mycur.execute(s4)
+        mycur.execute(s5)
 
     db.commit()
     db.close()

@@ -7,6 +7,6 @@ for s in "${symbols[@]}"
 do
     b1="table_${s,,}.csv"
     find "${HOME}/.zipline/minute" -name $b1 -exec cat {} >>"${HOME}/.zipline/minute_data_combined/$b1" \;
-    python fix_quantquote_csv.py ${HOME}/.zipline/minute_data_combined ${HOME}/.zipline/data_to_ingest/minute ${HOME}/.zipline/splits $s
+#    python fix_quantquote_csv.py ${HOME}/.zipline/minute_data_combined ${HOME}/.zipline/data_to_ingest/minute ${HOME}/.zipline/splits $s
 done
 

@@ -27,10 +27,6 @@ schedulled_event_list.append((pd.Timedelta('1 second') * 80, "Rebalance"))
 schedulled_event_list.append((pd.Timedelta('1 second') * 60, "EventE1"))
 schedulled_event_list.append((pd.Timedelta('1 second') * 60, "EventE2"))
 
-# get_history_data_for_rebalance
-# add_market_data_for_rebalance
-# orders_for_rebalance
-
 
 session_start = pd.to_datetime('now', utc=True) + pd.Timedelta('1 minute') * 3
 

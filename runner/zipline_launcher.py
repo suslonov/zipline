@@ -37,7 +37,7 @@ algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "st
 run_params = {}
 #run_params["start"] = datetime.strptime("2017-01-01", "%Y-%m-%d")
 run_params["start"] = pd.Timestamp(datetime.strptime("2019-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
-run_params["end"] = pd.Timestamp(datetime.strptime("2020-03-20", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+run_params["end"] = pd.Timestamp(datetime.strptime("2020-05-08", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 run_params["capital_base"] = 100000
 run_params["bundle"] = 'mixed-data'
 run_params["data_frequency"] = 'minute'
