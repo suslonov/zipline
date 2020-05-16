@@ -20,12 +20,4 @@ unset __conda_setup
 
 conda activate zipline1
 
-~/git/zipline/runner/dataload/quandlEODsymbolslist
-
-python ~/git/zipline/runner/dataload/prepare_ib_csv.py ~/.zipline/data_to_ingest/minute "UVXY, SVXY"
-#1>>/home/anton/git/zipline/runner/logs/dailydata.log 2>>/home/anton/git/zipline/runner/logs/dailydata.log
-
-rm -r ~/.zipline/data/mixed-data/*
-zipline ingest -b mixed-data
-
-python ~/git/zipline/runner/get_signals_from_data.py
+python ~/git/zipline/runner/algo_scheduler.py
