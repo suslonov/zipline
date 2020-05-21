@@ -179,12 +179,13 @@ def main():
         if sys.argv[1] == '1' or sys.argv[2].lower() == 'true':
             market_data = True
     if len(sys.argv) > 2:
-        input_date = pd.Timestamp(datetime.strptime(sys.argv[2], "%Y-%m-%d")).tz_localize(tz='US/Eastern')
+        input_date = pd.Timestamp(datetime.strptime(sys.argv[2], "%Y-%m-%d")).tz_localize(tz='Asia/Jerusalem').tz_convert(tz='US/Eastern')
     else:
-        input_date = pd.Timestamp(datetime.today()).tz_localize(tz='US/Eastern')
+        input_date = pd.Timestamp(datetime.today()).tz_localize(tz='Asia/Jerusalem').tz_convert(tz='US/Eastern')
 
     get_signals_from_data(input_date, market_data)
 
 
 if __name__ == '__main__':
     main()
+

@@ -37,7 +37,7 @@ print("started at: " + str(datetime.now()))
 while True: # TODO multithread processing
     if not q.empty():
         current_event = q.get()
-        print(current_event)
+        # print(current_event)
         if current_event[1] == ClockMessages.FINISH:
             break
         if current_event[1] == ClockMessages.EVENT:

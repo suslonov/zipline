@@ -6,6 +6,7 @@ import pickle
 import zlib
 import json
 import pandas as pd
+import time
 
 db_host="127.0.0.1"
 db_user="zipline"
@@ -19,7 +20,16 @@ def save_signals_to_db(alg_name, input_date, signals_comment, algorithm_params, 
     s5 = """INSERT INTO signals_data_table (signals_id, signals) VALUES (%s, _binary "%s")"""
 
     if port:
-        db = MySQLdb.connect(host=db_host, port=port, user=db_user, passwd=db_passwd, db=db_name)
+        tries = 0
+        while tries < 5:
+            try:
+                db = MySQLdb.connect(host=db_host, port=port, user=db_user, passwd=db_passwd, db=db_name)
+                break
+            except:
+                tries += 1
+                time.sleep(10)
+        else:
+            return
     else:
         db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
     mycur = db.cursor()
@@ -85,8 +95,11 @@ def load_signals_from_db(alg_name = None, algorithm_id = None, signals_id = None
     db.close()
     return l
 
-def load_signals_data_from_db(signals_id):
-    db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
+def load_signals_data_from_db(signals_id, port=None):
+    if port:
+        db = MySQLdb.connect(host=db_host, port=port, user=db_user, passwd=db_passwd, db=db_name)
+    else:
+        db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_passwd, db=db_name)
     mycur = db.cursor()
     s1 = """SELECT signals FROM signals_data_table WHERE signals_id = %s"""
     i = mycur.execute(s1, (signals_id, ))
