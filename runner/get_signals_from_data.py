@@ -157,6 +157,8 @@ def get_signals_from_data(input_date, market_data=False):
     else:
         data.current_day_data = {}
     
+    market_data = len([i for i in data.current_day_data.values() if not i is None]) != 0
+    
     context = FakeContext()
     context.bundle_data = bundle_data
     algorithm_context.initialize(context)
