@@ -33,7 +33,7 @@ class IBapi(EWrapper, EClient):
 
     def historicalData(self, reqId, bar):
         self.historical_data[reqId]["data"].loc[len(self.historical_data[reqId]["data"])] = \
-            [datetime.fromtimestamp(int(bar.date)), bar.open, bar.high, bar.low, bar.close, bar.volume, 0.0, 1.0]
+            [datetime.fromtimestamp(int(bar.date)), bar.open, bar.high, bar.low, bar.close, bar.volume]
         
     def historicalDataEnd(self, reqId, start, end):
         super().historicalDataEnd(reqId, start, end)
@@ -116,7 +116,7 @@ class IBManager:
     def reqHistoricalData(self, contract, reqId = None, endDateTime='', durationStr='2 D', barSizeSetting='1 hour', whatToShow='BID', useRTH=0, formatDate=2, keepUpToDate=False, chartOptions=[]):
         if not reqId:
             reqId = self.next_reqId()
-        data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio'])
+        data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume'])
         self.app.historical_data[reqId] = {"data": data_to_load, "finished": False}
         self.app.reqHistoricalData(reqId, contract, endDateTime, durationStr, barSizeSetting, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions)
         return reqId
@@ -127,7 +127,9 @@ class IBManager:
     def get_historical_data(self, reqId):
         return self.app.historical_data[reqId]["data"]
 
-    
+    def del_historical_data(self, reqId):
+        del(self.app.historical_data[reqId])
+
 """
 app.nextorderId = None
 

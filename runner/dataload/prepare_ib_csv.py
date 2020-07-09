@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+if  "__file__" in globals():
+    os.sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+else:
+    os.sys.path.append(os.path.abspath('.'))
+    os.sys.path.append(os.path.dirname(os.path.abspath('.')))
+
 import sys
 import pandas as pd
 import pytz
 from datetime import datetime
 import time
-from ibapi.client import EClient
-from ibapi.wrapper import EWrapper
-import threading
-from ibapi.contract import Contract
+import IBconnector
 
 eastern = pytz.timezone('US/Eastern')
 jerusalem = pytz.timezone('Asia/Jerusalem')
@@ -17,39 +22,19 @@ start_session = "09:30"
 end_session = "15:59"
 output_names = ['Date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio']
 
-class IBapi(EWrapper, EClient):
-    def __init__(self):
-        EClient.__init__(self, self)
-        self.data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio'])
+ib = IBconnector.IBManager()
 
-    def historicalData(self, reqId, bar):
-        self.data_to_load.loc[len(self.data_to_load)] = [datetime.fromtimestamp(int(bar.date)), bar.open, bar.high, bar.low, bar.close, bar.volume, 0.0, 1.0]
-
-def run_loop():
-    app.run()
-
-app = IBapi()
-
-ports = {4001: "Live IB gateway", 7496: "Live IB TWS", 4002: "Paper trading IB gateway", 7497: "Paper trading IB TWS"}
-for port in ports:
-    app.connect('127.0.0.1', port, 123)
-    if app.isConnected():
-        print("connected to:" + str(port) + " = " + ports[port])
-        break
-else:
-    print("exit: no connection")
+if ib.connect() == 0:
     SystemExit(0)
 
-api_thread = threading.Thread(target=run_loop, daemon=True)
-api_thread.start()
+ib.run()
 
 symbol_list = sys.argv[2].split(',')
 
-for (req_id, symbol) in enumerate(symbol_list):
+for symbol in symbol_list:
     symbol = str.strip(symbol)
     a = pd.read_csv(sys.argv[1] + '/' + symbol + '.csv', parse_dates=['Date'])
     a.set_index(pd.DatetimeIndex(a["Date"]), inplace=True)
-    app.data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio'])
     
     end_date = max(a.index).tz_localize(tz='US/Eastern').date()
     now_date = pd.to_datetime('now', utc=True).tz_convert(tz=eastern).date()
@@ -64,27 +49,23 @@ for (req_id, symbol) in enumerate(symbol_list):
         
     print("now ", now_date, " last loaded date ", end_date, " requesting ", days_to_request, " days")
     
-    req_contract = Contract()
-    req_contract.symbol = symbol
-    req_contract.secType = 'STK'
-    req_contract.exchange = 'SMART'
-    req_contract.currency = 'USD'
+    req_contract = ib.contract(symbol, exchange='SMART')
 
-    data_len = 0
-    app.reqHistoricalData(req_id, req_contract, '', str(days_to_request) + ' D', '1 min', 'TRADES', 0, 2, False, [])
+    req_id = ib.reqHistoricalData(req_contract, durationStr=str(days_to_request) + ' D', barSizeSetting='1 min',  whatToShow='TRADES')
 
-    time.sleep(30 + days_to_request * 5)
-    while data_len < len(app.data_to_load):
-        data_len = len(app.data_to_load)
+    while not ib.historical_data_finished(req_id):
         time.sleep(1)
-    print(symbol, len(app.data_to_load))
-    
-    if len(app.data_to_load) == 0:
+
+    historical_data = ib.get_historical_data(req_id)    
+    print(symbol, len(historical_data))
+    if len(historical_data) == 0:
         continue
 
-    app.data_to_load["Date"] = app.data_to_load.apply(lambda row: pd.Timestamp(jerusalem.localize(row._date).astimezone(eastern)), axis = 1)
-    app.data_to_load.set_index(pd.DatetimeIndex(app.data_to_load["Date"]), inplace=True)
-    aa = app.data_to_load.loc[app.data_to_load.index < pd.Timestamp(now_date)]
+    historical_data['ex_dividend'] = 0.0
+    historical_data['split_ratio'] = 1.0
+    historical_data["Date"] = historical_data.apply(lambda row: pd.Timestamp(jerusalem.localize(row._date).astimezone(eastern)), axis = 1)
+    historical_data.set_index(pd.DatetimeIndex(historical_data["Date"]), inplace=True)
+    aa = historical_data.loc[historical_data.index < pd.Timestamp(now_date)]
     aa = aa.loc[aa.index > pd.Timestamp(end_date + pd.Timedelta('1 day'))]
 
     if len(aa) == 0:
@@ -97,5 +78,6 @@ for (req_id, symbol) in enumerate(symbol_list):
 
     ab = a.append(aa)
     ab.to_csv(sys.argv[1] + '/' + symbol + '.csv', columns=output_names, index=False)
+    ib.del_historical_data(req_id)
 
-app.disconnect()
+ib.disconnect()

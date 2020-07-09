@@ -15,16 +15,15 @@ from zipline.data.data_portal import DataPortal
 from trading_calendars import get_calendar
 from zipline.utils.run_algo import load_extensions
 
-from ibapi.client import EClient
-from ibapi.wrapper import EWrapper
-from ibapi.contract import Contract
-
 if  "__file__" in globals():
     os.sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 else:
     os.sys.path.append(os.path.abspath('.'))
+    os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 import zipline_utils
 import remote_server
+import IBconnector
 
 class FakeContext():
     def __init__(self):
@@ -49,67 +48,41 @@ class MyDailyData(DataPortal):
         return self.one_symbol_history(equity, field, 1, '1d').iloc[-1]
         # return self.get_history_window([equity], self.end_dt, 1, '1d', field, 'daily').iloc[0, 0] # TODO
 
-class IBapi(EWrapper, EClient):
-    def __init__(self):
-        EClient.__init__(self, self)
-        self.data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio'])
-
-    def historicalData(self, reqId, bar):
-        self.data_to_load.loc[len(self.data_to_load)] = [datetime.fromtimestamp(int(bar.date)), bar.open, bar.high, bar.low, bar.close, bar.volume, 0.0, 1.0]
-
 eastern = pytz.timezone('US/Eastern')
 jerusalem = pytz.timezone('Asia/Jerusalem')
 start_session = "09:30"
 end_session = "15:59"
 
 def connect_once_to_ib_get_data(symbol_list, input_date):
-    def run_loop():
-        app.run()
-        
-    app = IBapi()
-
-    ports = {4001: "Live IB gateway", 7496: "Live IB TWS", 4002: "Paper trading IB gateway", 7497: "Paper trading IB TWS"}
-    for port in ports:
-        app.connect('127.0.0.1', port, 123)
-        if app.isConnected():
-            print("connected to:" + str(port) + " = " + ports[port])
-            break
-    else:
-        print("exit: no connection")
+    ib = IBconnector.IBManager()
+    if ib.connect() == 0:
         SystemExit(0)
-    
-    api_thread = threading.Thread(target=run_loop, daemon=True)
-    api_thread.start()
+    ib.run()
 
     current_day_data = {}
-    for (req_id, symbol) in enumerate(symbol_list):
-        req_contract = Contract()
-        req_contract.symbol = symbol
-        req_contract.secType = 'STK'
-        req_contract.exchange = 'SMART'
-        req_contract.currency = 'USD'
+    for symbol in symbol_list:
+        req_contract = ib.contract(symbol, exchange='SMART')
+        req_id = ib.reqHistoricalData(req_contract, durationStr='1 D', barSizeSetting='1 min',  whatToShow='TRADES')
 
-        data_len = 0
-        app.data_to_load = pd.DataFrame(columns=['_date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend', 'split_ratio'])
-        app.reqHistoricalData(req_id, req_contract, '', '1 D', '1 min', 'TRADES', 0, 2, False, [])
-
-        time.sleep(30)
-        while data_len < len(app.data_to_load):
-            data_len = len(app.data_to_load)
+        while not ib.historical_data_finished(req_id):
             time.sleep(1)
     
-        if len(app.data_to_load) == 0:
+        historical_data = ib.get_historical_data(req_id)    
+        if len(historical_data) == 0:
             current_day_data[symbol] = None
             continue
     
-        app.data_to_load["Date"] = app.data_to_load.apply(lambda row: pd.Timestamp(jerusalem.localize(row._date).astimezone(eastern)), axis = 1)
-        app.data_to_load.set_index(pd.DatetimeIndex(app.data_to_load["Date"]), inplace=True)
-        aa = app.data_to_load.loc[app.data_to_load.index < input_date + pd.Timedelta('1 day')]
+        historical_data['ex_dividend'] = 0.0
+        historical_data['split_ratio'] = 1.0
+        historical_data["Date"] = historical_data.apply(lambda row: pd.Timestamp(jerusalem.localize(row._date).astimezone(eastern)), axis = 1)
+        historical_data.set_index(pd.DatetimeIndex(historical_data["Date"]), inplace=True)
+        aa = historical_data.loc[historical_data.index < input_date + pd.Timedelta('1 day')]
         aa = aa.between_time(start_session, end_session)
         aa = aa.loc[aa.index == max(aa.index)]
         current_day_data[symbol] = aa
+        ib.del_historical_data(req_id)
 
-    app.disconnect()
+    ib.disconnect()
     return current_day_data
 
 def get_signals_from_data(input_date, market_data=False):
