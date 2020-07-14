@@ -22,10 +22,13 @@ session_start = pd.Timestamp(pd.to_datetime('now').replace(hour=9, minute=30, se
 # session_start.tz_convert(tz='Asia/Jerusalem')
 stop_at = session_start + pd.Timedelta('1 hour')
 
-scheduled_event_list = []
-scheduled_event_list.append((pd.Timedelta('1 minute') * 15, "Signals15"))
+print("session_start: ", session_start)
+print("stop_at: ", stop_at)
 
-clock1 = RealtimeClock(1, stop_at, session_start, scheduled_event_list, q)
+schedulled_event_list = []
+schedulled_event_list.append((pd.Timedelta('1 minute') * 15, "Signals15"))
+
+clock1 = RealtimeClock(1, stop_at, session_start, schedulled_event_list, q)
 
 def run_loop():
     clock1.event_loop()

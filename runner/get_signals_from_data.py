@@ -55,11 +55,11 @@ end_session = "15:59"
 
 def connect_once_to_ib_get_data(symbol_list, input_date):
     ib = IBconnector.IBManager()
+    current_day_data = {}
     if ib.connect() == 0:
-        SystemExit(0)
+        return current_day_data
     ib.run()
 
-    current_day_data = {}
     for symbol in symbol_list:
         req_contract = ib.contract(symbol, exchange='SMART')
         req_id = ib.reqHistoricalData(req_contract, durationStr='1 D', barSizeSetting='1 min',  whatToShow='TRADES')
