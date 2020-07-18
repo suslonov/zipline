@@ -29,7 +29,7 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     return x, more_output
 
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100, 
-                    "SPREAD_ORDERS_N": 1, "SPREAD_ORDERS_T": 60}
+                    "SPREAD_ORDERS_N": 1, "SPREAD_ORDERS_T": 100}
 alg_name = "VIX+Bonds+Indicators+Stops 1"
 run_params = {}
 run_params["start"] = pd.Timestamp(datetime.strptime("2019-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
@@ -39,17 +39,23 @@ run_params["bundle"] = 'mixed-data'
 run_params["data_frequency"] = 'minute'
 params_extractor = {"parameter1": "VIX_OPEN_LEVEL", "parameter2": "VIX_SHARE", "parameter3": "WINDOW_MIN"}
 
-run_comment = str(algorithm_params["SPREAD_ORDERS_N"]) + " orders, " + str(algorithm_params["SPREAD_ORDERS_T"]) + "sec interval"
-with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
-    x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
-    text_output = buf.getvalue()
-alg_return = x.algorithm_period_return.iloc[-1]
-max_drawdown = x.max_drawdown.iloc[-1]
-max_drawdown = max_drawdown if max_drawdown < 0 else 0
-metrics = {"return (%)": alg_return, "drawdown (%)": max_drawdown, "Win/loss": zipline_utils.metrics_winloss(x, ['TLT'])}
-
-zipline_utils.save_run_to_db(alg_name, run_comment, text_output, run_params, algorithm_params, metrics, params_extractor, x)
-print(metrics)
+for (N, T) in [(1,60), (2,60), (3,60), (5,60), (10,60), (5,600), (2,1800),]:
+    algorithm_params["SPREAD_ORDERS_N"] = N
+    algorithm_params["SPREAD_ORDERS_T"] = T
+    if N >1:
+        run_comment = str(algorithm_params["SPREAD_ORDERS_N"]) + " orders, " + str(algorithm_params["SPREAD_ORDERS_T"]) + "sec interval"
+    else:
+        run_comment = str(algorithm_params["SPREAD_ORDERS_N"]) + " order"
+    with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
+        x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
+        text_output = buf.getvalue()
+    alg_return = x.algorithm_period_return.iloc[-1]
+    max_drawdown = x.max_drawdown.iloc[-1]
+    max_drawdown = max_drawdown if max_drawdown < 0 else 0
+    metrics = {"return (%)": alg_return, "drawdown (%)": max_drawdown, "Win/loss": zipline_utils.metrics_winloss(x, ['TLT'])}
+    
+    zipline_utils.save_run_to_db(alg_name, run_comment, text_output, run_params, algorithm_params, metrics, params_extractor, x)
+    print(metrics)
 
 
  

@@ -59,6 +59,9 @@ class IBapi(EWrapper, EClient):
     def updateMktDepth(self, reqId, position, operation, side, price, size):
         print(f'reqId: {reqId} position: {position} operation: {operation} side: {side} price: {price}, size: {size}')
 
+    def mktDepthExchanges(self,	depthMktDataDescriptions):
+        print(depthMktDataDescriptions)
+
 class IBManager:
     def __init__(self):
         self.app = IBapi()
@@ -110,7 +113,7 @@ class IBManager:
 # add processing        
         return reqId
 
-    def cancelMktData(self, contract, reqId):
+    def cancelMktData(self, reqId):
         self.app.cancelMktData(reqId)
 
     def reqHistoricalData(self, contract, reqId = None, endDateTime='', durationStr='2 D', barSizeSetting='1 hour', whatToShow='BID', useRTH=0, formatDate=2, keepUpToDate=False, chartOptions=[]):
