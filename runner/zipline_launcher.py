@@ -29,8 +29,8 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     return x, more_output
 
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100, 
-                    "SPREAD_ORDERS_N": 1, "SPREAD_ORDERS_T": 60}
-alg_name = "VIX+Bonds+Indicators+Stops 1"
+                    "SPREAD_ORDERS_D": 3, "SPREAD_ORDERS_ALL": 1}
+alg_name = "VIX+Bonds+Indicators+Stops 2"
 run_params = {}
 run_params["start"] = pd.Timestamp(datetime.strptime("2019-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
 run_params["end"] = pd.Timestamp(datetime.strptime("2020-07-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
@@ -39,7 +39,7 @@ run_params["bundle"] = 'mixed-data'
 run_params["data_frequency"] = 'minute'
 params_extractor = {"parameter1": "VIX_OPEN_LEVEL", "parameter2": "VIX_SHARE", "parameter3": "WINDOW_MIN"}
 
-run_comment = str(algorithm_params["SPREAD_ORDERS_N"]) + " orders, " + str(algorithm_params["SPREAD_ORDERS_T"]) + "sec interval"
+run_comment = str(algorithm_params["SPREAD_ORDERS_D"]) + " daily order(s), " + " fire orders anyway " + str(algorithm_params["SPREAD_ORDERS_ALL"])
 with io.StringIO() as buf, redirect_stdout(buf), redirect_stderr(buf):
     x, more_output = zipline_launcher(alg_name, run_params, algorithm_params)
     text_output = buf.getvalue()
