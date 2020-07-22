@@ -25,7 +25,7 @@ output_names = ['Date', 'open', 'high', 'low', 'close', 'volume', 'ex_dividend',
 ib = IBconnector.IBManager()
 
 if ib.connect() == 0:
-    SystemExit(0)
+    sys.exit()
 
 ib.run()
 

@@ -29,7 +29,7 @@ def zipline_launcher(alg_name, run_params, algorithm_params):
     return x, more_output
 
 algorithm_params = {"WINDOW_MIN": 5, "VIX_SHARE": 0.6, "VIX_OPEN_LEVEL": 15, "stop_limit": 0.075, "MA": 100, 
-                    "SPREAD_ORDERS_D": 3, "SPREAD_ORDERS_ALL": 1}
+                    "SPREAD_ORDERS_D": 2, "SPREAD_ORDERS_ALL": 0}
 alg_name = "VIX+Bonds+Indicators+Stops 2"
 run_params = {}
 run_params["start"] = pd.Timestamp(datetime.strptime("2019-01-01", "%Y-%m-%d")).tz_localize(tz='US/Eastern')
