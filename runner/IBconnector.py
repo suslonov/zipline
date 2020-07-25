@@ -12,7 +12,7 @@ from datetime import datetime
 import pandas as pd
 
 from ibapi.contract import Contract
-from ibapi.order import *
+from ibapi.order import Order
 
 ports = {4001: "Live IB gateway", 7496: "Live IB TWS", 4002: "Paper trading IB gateway", 7497: "Paper trading IB TWS"}
 
@@ -133,17 +133,32 @@ class IBManager:
     def del_historical_data(self, reqId):
         del(self.app.historical_data[reqId])
 
-"""
-app.nextorderId = None
+    def stock_contract(self, symbol, secType='STK', exchange='SMART', currency='USD'):
+        c = Contract()
+        c.symbol = symbol
+        c.secType = secType
+        c.exchange = exchange
+        c.currency = currency
+        return c
+    
+    def reqIds(self):
+        self.app.reqIds(0)
 
+    def submit_limit_order(self, contract, action, account, order_type, qty, lmt_price, transmit=True):
+        order = Order()
+        order.action = action
+        order.account = account
+        order.totalQuantity = qty
+        order.orderType = order_type
+        order.lmtPrice = lmt_price
+        order.transmit = transmit
+        order_id = self.app.nextorderId
+        self.app.placeOrder(order_id, contract, order)
+        self.app.nextorderId += 1
+        return order_id
+    
+    def cancel_order(self, order_id):
+        self.app.cancelOrder(order_id)
 
-while True:
-    if isinstance(app.nextorderId, int):
-        print('connected')
-        break
-    else:
-        print('waiting for connection')
-        time.sleep(1)
-
-
-"""
+    def reqAllOpenOrders(self):
+        self.app.reqAllOpenOrders()
