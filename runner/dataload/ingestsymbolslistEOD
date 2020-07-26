@@ -1,4 +1,0 @@
-rm -r ~/.zipline/data/EOD-only-data/*
-
-zipline ingest -b EOD-only-data
-

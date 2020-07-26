@@ -1,1 +1,0 @@
-python prepare_ib_csv.py /home/anton/.zipline/data_to_ingest/minute "UVXY, SVXY"
