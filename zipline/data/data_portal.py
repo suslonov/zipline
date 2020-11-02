@@ -459,21 +459,28 @@ class DataPortal(object):
                 if field == "last_traded":
                     return self.get_last_traded_dt(asset, dt, 'minute')
                 elif field == "price":
-                    return self._get_minute_spot_value(
-                        asset, "close", dt, ffill=True,
-                    )
+                    minute_spot_value = self._get_minute_spot_value(asset, "close", dt, ffill=True)
+                    if np.isnan(minute_spot_value):
+                        raise NoDataForSid
+                    return minute_spot_value
                 elif field == "contract":
                     return self._get_current_contract(asset, dt)
                 else:
-                    return self._get_minute_spot_value(asset, field, dt)
+                    minute_spot_value = self._get_minute_spot_value(asset, field, dt)
+                    if np.isnan(minute_spot_value):
+                        raise NoDataForSid
+                    return minute_spot_value
             except NoDataForSid:
                 pass
-        if field == "contract":
-            return self._get_current_contract(asset, session_label)
+            if field == "contract":
+                return self._get_current_contract(asset, self.trading_calendar.previous_session_label(session_label))
+            else:
+                return self._get_daily_spot_value(asset, field, self.trading_calendar.previous_session_label(session_label))
         else:
-            return self._get_daily_spot_value(
-                asset, field, session_label,
-                )
+            if field == "contract":
+                return self._get_current_contract(asset, session_label)
+            else:
+                return self._get_daily_spot_value(asset, field, session_label)
 
     def get_spot_value(self, assets, field, dt, data_frequency):
         """
@@ -698,10 +705,11 @@ class DataPortal(object):
             try:
                 return reader.get_value(asset.sid, dt, column)
             except NoDataOnDate:
-                if column != 'volume':
-                    return np.nan
-                else:
-                    return 0
+                return np.nan
+                # if column != 'volume':
+                #     return np.nan
+                # else:
+                #     return 0
 
         # At this point the pairing of column='close' and ffill=True is
         # assumed.

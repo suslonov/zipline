@@ -1139,10 +1139,11 @@ class BcolzMinuteBarReader(MinuteBarReader):
         except IndexError:
             value = 0
         if value == 0:
-            if field == 'volume':
-                return 0
-            else:
-                return np.nan
+            return np.nan
+            # if field == 'volume':
+            #     return 0
+            # else:
+            #     return np.nan
 
         if field != 'volume':
             value *= self._ohlc_ratio_inverse_for_sid(sid)
