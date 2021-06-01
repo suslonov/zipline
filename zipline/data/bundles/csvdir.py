@@ -168,7 +168,7 @@ def csvdir_bundle(environ,
         if writer_flag:
             adjustment_writer.write(splits=divs_splits_d['splits'],
                                 dividends=divs_splits_d['divs'])
-                
+
             # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
             # register "CSVDIR" to resolve to the NYSE calendar, because these
             # are all equities and thus can use the NYSE calendar.
