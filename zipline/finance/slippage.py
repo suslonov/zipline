@@ -661,6 +661,12 @@ class FixedBasisPointsSlippage(SlippageModel):
     def process_order(self, data, order):
 
         volume = data.current(order.asset, "volume")
+        # print('process_order', order.asset, self.volume_limit,  volume)
+        
+        if np.isnan(volume):
+            # print(data.history(order.asset, 'close', 390, '1m'))
+            volume = 0
+
         max_volume = int(self.volume_limit * volume)
 
         price = data.current(order.asset, "close")
