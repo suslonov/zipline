@@ -182,8 +182,7 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
         files = os.listdir(csvdir)
         for sid, symbol in enumerate(it):
             try:
-                fname = [fname for fname in files
-                         if '%s.csv' % symbol in fname][0]
+                fname = [fname for fname in files if '%s.csv' % symbol == fname][0]
             except IndexError:
                 raise ValueError("%s.csv file is not in %s" % (symbol, csvdir))
 
