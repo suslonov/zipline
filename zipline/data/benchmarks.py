@@ -48,3 +48,7 @@ def get_benchmark_returns(symbol):
     # df = df['close']
 
     # return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]
+
+def get_benchmark_returns_local(symbol, filepath):
+    df = pd.read_csv(filepath, index_col=0, parse_dates=True)["close"]
+    return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]

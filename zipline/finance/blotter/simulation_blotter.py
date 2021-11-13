@@ -355,6 +355,7 @@ class SimulationBlotter(Blotter):
 
                     order.filled += txn.amount
                     order.commission += additional_commission
+                    txn.commission = additional_commission
 
                     order.dt = txn.dt
 

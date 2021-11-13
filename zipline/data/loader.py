@@ -19,7 +19,7 @@ import pandas as pd
 from six.moves.urllib_error import HTTPError
 from trading_calendars import get_calendar
 
-from .benchmarks import get_benchmark_returns
+from .benchmarks import get_benchmark_returns_local
 from ..utils.paths import (
     cache_root,
     data_root,
@@ -179,7 +179,9 @@ def ensure_benchmark_data(symbol, first_date, last_date, now, trading_day,
     )
 
     try:
-        data = get_benchmark_returns(symbol)
+        filepath = data_root(environ)[:-4] + "data_to_ingest/daily/" + symbol + ".csv"
+        data = get_benchmark_returns_local(symbol, filepath)
+        # data = get_benchmark_returns(symbol)
         data.to_csv(get_data_filepath(filename, environ))
     except (OSError, IOError, HTTPError):
         logger.exception('Failed to cache the new benchmark returns')
