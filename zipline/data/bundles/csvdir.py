@@ -198,7 +198,11 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
             ac_date = end_date + Timedelta(days=1)
             sids = metadata.loc[metadata["symbol"] == symbol].index
             if sids.empty:
-                metadata.iloc[sid] = start_date, end_date, ac_date, symbol
+                try:
+                    metadata.iloc[sid] = start_date, end_date, ac_date, symbol
+                except Exception as e:
+                    print("/n", sid, start_date, end_date, ac_date, symbol)
+                    raise e
             else:
                 sid = sids[0]
             logger.debug('%s: sid %s' % (symbol, sid))
