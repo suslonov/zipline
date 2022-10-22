@@ -220,7 +220,7 @@ def ignore_pandas_nan_categorical_warning():
 
 
 _INDEXER_NAMES = [
-    '_' + name for (name, _) in pd.core.indexing.get_indexers_list()
+    # '_' + name for (name, _) in pd.core.indexing.get_indexers_list()
 ]
 
 

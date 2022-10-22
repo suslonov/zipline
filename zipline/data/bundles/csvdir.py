@@ -18,7 +18,6 @@ handler = StreamHandler(sys.stdout, format_string=" | {record.message}")
 logger = Logger(__name__)
 logger.handlers.append(handler)
 
-
 def csvdir_equities(tframes=None, csvdir=None):
     """
     Generate an ingest function for custom data bundle
@@ -189,7 +188,8 @@ def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
             dfr = read_csv(os.path.join(csvdir, fname),
                            parse_dates=[0],
                            infer_datetime_format=True,
-                           index_col=0).sort_index()
+                           index_col=0,
+                           ).sort_index()
 
             start_date = dfr.index[0]
             end_date = dfr.index[-1]

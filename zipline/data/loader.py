@@ -70,8 +70,6 @@ def has_data_for_dates(series_or_df, first_date, last_date):
     last_date?
     """
     dts = series_or_df.index
-    if not isinstance(dts, pd.DatetimeIndex):
-        raise TypeError("Expected a DatetimeIndex, but got %s." % type(dts))
     first, last = dts[[0, -1]]
     return (first <= first_date) and (last >= last_date)
 
@@ -207,13 +205,12 @@ def _load_cached_data(filename, first_date, last_date, now, environ=None):
         try:
             data = pd.read_csv(
                 path,
-                parse_dates=[0],
                 index_col=0,
-                header=None,
+                parse_dates=[0],
+                # header=None,
                 # Pass squeeze=True so that we get a series instead of a frame.
                 squeeze=True,
             ).tz_localize('UTC')
-
             if has_data_for_dates(data, first_date, last_date):
                 return data
 
