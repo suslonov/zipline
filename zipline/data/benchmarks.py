@@ -50,5 +50,5 @@ def get_benchmark_returns(symbol):
     # return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]
 
 def get_benchmark_returns_local(symbol, filepath):
-    df = pd.read_csv(filepath, index_col=0, parse_dates=True)["close"]
+    df = pd.read_csv(filepath, index_col=0, parse_dates=True)["close"].tz_localize('UTC')
     return df.sort_index().pct_change(1).iloc[1:]
