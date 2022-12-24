@@ -225,7 +225,7 @@ def _load_cached_data(filename, first_date, last_date, now, environ=None):
                 )
                 return data
 
-        except (OSError, IOError, ValueError) as e:
+        except Exception as e:
             # These can all be raised by various versions of pandas on various
             # classes of malformed input.  Treat them all as cache misses.
             logger.info(
